@@ -1,0 +1,218 @@
+Sub Stocks():
+
+
+    'Set initial variables to hold values
+
+    Dim Ticker As String
+    Dim YearlyChangeClose As Double
+    Dim YearlyChangeOpen As Double
+    Dim PercentChange As Double
+    Dim TotalStockVolume As LongLong
+    Dim SummaryTableRow As LongLong
+    
+    Dim GreatestPercentIncreaseTicker As String
+    Dim GreatestPercentIncrease As Double
+    Dim GreatestPercentDecreaseTicker As String
+    Dim GreatestPercentDecrease As Double
+    Dim GreatestTotalVolumeTicker As String
+    Dim GreatestTotalVolume As LongLong
+    
+    Dim ws As Worksheet
+    
+    For Each ws In Worksheets
+        
+        ws.Activate
+    'Determine last row
+    
+    LastRow = ws.Cells(Rows.Count, 1).End(xlUp).Row
+    
+    'Insert headers
+    
+   
+    ws.Cells(1, 9).Value = "Ticker"
+    ws.Cells(1, 10).Value = "Yearly Change"
+    ws.Cells(1, 11).Value = "Percent Change"
+    ws.Cells(1, 12).Value = "Total Stock Volume"
+    
+    'Assign initial variables
+    
+    YearlyChangeClose = 0
+    PercentChange = 0
+    TotalStockVolume = 0
+    YearlyChangeOpen = Cells(2, 3).Value
+   
+    'keep track of the location of each stock ticker in the ticker column
+    
+    SummaryTableRow = 2
+    
+      
+    'Insert sumary headers
+    ws.Cells(1, 16).Value = "Ticker"
+    ws.Cells(1, 17).Value = "Value"
+    ws.Cells(2, 15).Value = "Gratest%Increase"
+    ws.Cells(3, 15).Value = "Greatest%Decrease"
+    ws.Cells(4, 15).Value = "Greatest Total Volume"
+          
+    'Determine the last row for the ticker summary columns
+
+    LastRowSummary = ws.Cells(Rows.Count, 9).End(xlUp).Row
+   
+        
+    'loop through year of stock data
+    For i = 2 To LastRow
+    
+            
+        If ws.Cells(i + 1, 1).Value <> Cells(i, 1).Value Then
+        
+    'set the ticker name
+            Ticker = ws.Cells(i, 1).Value
+        
+            
+    'add total stock volume of the stock
+            TotalStockVolume = TotalStockVolume + ws.Cells(i, 7).Value
+            
+    'Subtract final colse to initial open to get yearly change
+            YearlyChangeClose = ws.Cells(i, 6).Value - YearlyChangeOpen
+            
+            
+    'percentage change
+            If YearlyChangeOpen = 0 Then
+                PercentChange = 0
+            Else
+                         
+                PercentChange = YearlyChangeClose / YearlyChangeOpen
+                        
+            End If
+        
+    'Print the ticker name
+           ws.Cells(SummaryTableRow, 9).Value = Ticker
+           
+    'print yearly change total
+           ws.Cells(SummaryTableRow, 10).Value = YearlyChangeClose
+     
+     'Conditional formatting
+      If YearlyChangeClose < 0 Then
+        
+            ws.Range("J" & SummaryTableRow).Interior.ColorIndex = 3
+            
+         
+        ElseIf YearlyChangeClose >= 0 Then
+        
+            ws.Range("J" & SummaryTableRow).Interior.ColorIndex = 4
+           
+          
+        Else
+        
+            'do nothing
+        End If
+    
+    'Print Percentage
+           ws.Cells(SummaryTableRow, 11) = Format(PercentChange, "Percent")
+        
+           
+    'Print the Total Stock Volume
+           ws.Cells(SummaryTableRow, 12).Value = TotalStockVolume
+            
+   
+        
+    'Add one to the summary table row
+              
+           SummaryTableRow = SummaryTableRow + 1
+           
+    'Reset the Total Stock Volume
+           TotalStockVolume = 0
+           
+           
+    'add one to go to the next ticker
+           
+           YearlyChangeOpen = ws.Cells(i + 1, 3).Value
+           Else
+           
+           
+           TotalStockVolume = TotalStockVolume + ws.Cells(i, 7).Value
+        End If
+                
+   Next i
+    
+   'Get values for greatest percent increase, greatest percent decrease, and greatest total volume
+        
+        GreatestPercentIncrease = WorksheetFunction.Max((Range(ws.Cells(2, 11), ws.Cells(LastRowSummary, 11))))
+        GreatestPercentDecrease = WorksheetFunction.Min((Range(ws.Cells(2, 11), ws.Cells(LastRowSummary, 11))))
+        GreatestTotalVolume = WorksheetFunction.Max((Range(ws.Cells(2, 12), ws.Cells(LastRowSummary, 12))))
+        
+    
+   'Loop through summary table to match values with tickers
+        
+        For i = 2 To LastRowSummary
+        
+                       
+            ' Find stock ticker with greatest percent increase and assign to greatest percent increase ticker variable
+            If ws.Cells(i, 11).Value = GreatestPercentIncrease Then
+           
+                If GreatestPercentIncreaseTicker = "" Then
+                    
+                    GreatestPercentIncreaseTicker = ws.Cells(i, 9).Value
+                
+                Else
+                    
+                    GreatestPercentIncreaseTicker = GreatestPercentIncreaseTicker & ", " & ws.Cells(i, 9).Value
+                
+                End If
+            
+            End If
+            
+            ' Find stock ticker with greatest percent decrease and assign to greatest percent decrease ticker variable
+            If ws.Cells(i, 11).Value = GreatestPercentDecrease Then
+
+                If GreatestPercentDecreaseTicker = "" Then
+                    
+                    GreatestPercentDecreaseTicker = ws.Cells(i, 9).Value
+
+                Else
+                    
+                    GreatestPercentDecreaseTicker = GreatestPercentDecreaseTicker & ", " & ws.Cells(i, 9).Value
+                    
+                End If
+                
+            End If
+
+            ' Find stock ticker with greatest total volume and assign to greatest total stock volume ticker variable
+            If ws.Cells(i, 12).Value = GreatestTotalVolume Then
+            
+                If GreatestTotalVolumeTicker = "" Then
+                
+                    GreatestTotalVolumeTicker = ws.Cells(i, 9).Value
+                    
+                Else
+                
+                    GreatestTotalVolumeTicker = GreatestTotalVolumeTicker & ", " & ws.Cells(i, 9).Value
+                     
+                End If
+
+            End If
+
+        Next i
+
+        ' Print values to summary table
+        ws.Cells(2, 16).Value = GreatestPercentIncreaseTicker
+        ws.Cells(3, 16).Value = GreatestPercentDecreaseTicker
+        ws.Cells(4, 16).Value = GreatestTotalVolumeTicker
+        ws.Cells(2, 17).Value = Format(GreatestPercentIncrease, "Percent")
+        ws.Cells(3, 17).Value = Format(GreatestPercentDecrease, "Percent")
+        ws.Cells(4, 17).Value = GreatestTotalVolume
+
+        ' Reset ticker values
+        GreatestPercentIncreaseTicker = ""
+        GreatestPercentDecreaseTicker = ""
+        GreatestTotalVolumeTicker = ""
+     
+    
+    
+    
+    
+   Next ws
+
+End Sub
+
+
+
